@@ -1,0 +1,12 @@
+{
+  "name": "task1",
+  "module": "index.ts",
+  "private": true,
+  "devDependencies": {
+    "@cucumber/cucumber": "^8.11.1",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  }
+}
