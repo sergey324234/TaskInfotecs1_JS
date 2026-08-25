@@ -16,21 +16,23 @@ const execPromise = promisify(exec);
 
 const chalk = require('chalk');
 
+Before(async function (scenario) {
+    // Имя сценария
+    this.scenarioName = scenario.pickle.name;
+    this.targetFile = "test.txt"
 
-
-Given('существует объект {string} с правами {string}', async function(nameobj, mode) {
-    this.targetObj = nameobj;
-    this.oldMode = mode;
-
-    await writeFileAsync(this.targetObj, '123');
-    await execPromise(`chmod ${this.oldMode} ${this.targetObj}`);
+    await writeFileAsync(this.targetFile, '123');
 });
 
-When('я меняю права этого файла на {string}', async function(mode) {
+Given('существует файл с правами {string}', async function(mode) {
 
-    this.newMode = mode;
+    await execPromise(`chmod ${mode} ${this.targetFile}`);
+});
+
+When(/^я меняю права этого объекта на (.*)$/, async function(mode) {
+
     try {
-        const {stdout, stderr} = await execPromise(`chmod ${this.newMode} ${this.targetObj}`);
+        const {stdout, stderr} = await execPromise(`chmod ${mode} ${this.targetFile}`);
 
         this.result = {stdout, stderr, error: null} 
     }
@@ -44,25 +46,29 @@ When('я меняю права этого файла на {string}', async funct
 
 Then('сравниваем результат с {string}', async function (answerMode) {
 
-    if (answerMode === "error") {
-        if (this.result.error !== null) {
-            console.log(chalk.green(`\n[Ok] предвиденная ошибка:\n${this.result.error}`));
-            return;
-        }
-        throw new Error(`Ожидалась ошибка при chmod ${this.newMode}, но команда прошла успешно.`);
+    const isError = this.result.error !== null;
+    const isExpectedError = answerMode === "error";
+
+    if (isError && isExpectedError) {
+        console.log(chalk.yellow(`\n[ERROR] [${this.scenarioName}] предвиденная ошибка:\n${this.result.error}`));
+        return;
     }
 
-    const stats = fs.statSync(this.targetObj);
+    if (isError || isExpectedError) {
+        throw new Error(`[ERROR] [${this.scenarioName}] Непредвиденная ошибка:\n${this.result.error}`);
+    }
+
+    const stats = fs.statSync(this.targetFile);
     const actualMode = (stats.mode & 0o7777).toString(8);
 
     const expectedMode = parseInt(answerMode, 8).toString(8);
 
     if(actualMode === expectedMode) {
-        console.log(chalk.green(`\n[Ok] Права совпадают!`))
+        console.log(chalk.green(`\n[OK] [${this.scenarioName}] Права совпадают!`))
         return;
     }
 
-    throw new Error(`Текущие права (${actualMode}) не совпадают с ожидаемыми (${expectedMode})`);
+    throw new Error(`[ERROR] [${this.scenarioName}]\nТекущие права: (${actualMode}) не совпадают с ожидаемыми: (${expectedMode})`);
 
 });
 
@@ -70,9 +76,10 @@ Then('сравниваем результат с {string}', async function (answ
 
 After(async function () {
 
-    if (this.targetObj && fs.existsSync(this.targetObj)) {
-        await unlinkAsync(this.targetObj);
-    }
+
+    await unlinkAsync(this.targetFile);
+    
+
 })
 
 
