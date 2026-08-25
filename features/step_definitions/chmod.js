@@ -13,7 +13,7 @@ const unlinkAsync = promisify(fs.unlink);
 const exec = require('child_process').exec;
 const execPromise = promisify(exec);
 
-
+    
 const chalk = require('chalk');
 
 Before(async function (scenario) {
