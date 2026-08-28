@@ -15,6 +15,7 @@ import os from 'os'
 Before(async function (scenario) {
     
     this.scenarioName = scenario.pickle.name;
+    this.mode = ""
 
     this.targetFile = path.join(os.tmpdir(), `test.txt`);
     await Bun.write(this.targetFile, '123');
@@ -25,9 +26,16 @@ Given('существует файл с правами {string}', async function
     await $`chmod ${mode} ${this.targetFile}`;
 })
 
+When("установлен символьный режим {string}", async function(SymbolMode) {
+
+    this.mode += SymbolMode;
+    
+})
+
 When("я меняю права этого объекта на {string}", async function(mode) {
 
-    const proc = await $`chmod ${mode} ${this.targetFile}`.quiet().nothrow();
+    this.mode += mode;
+    const proc = await $`chmod ${this.mode} ${this.targetFile}`.quiet().nothrow();
 
     this.result = {
         error: proc.exitCode ? proc.stderr.toString() : null
