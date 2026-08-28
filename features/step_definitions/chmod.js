@@ -44,6 +44,29 @@ Given('существует кластер файлов и папок с пра�
     await $`chmod -R ${mode} ${this.targetObj}`;
 })
 
+Given('существуют файлы с правами {string}', async function(rawInput) {
+    const pairs = rawInput.split(',').map(s => s.trim()).filter(Boolean);
+    this.targetObj = [];
+
+    for (const pair of pairs) {
+        const lastSpace = pair.lastIndexOf(' ');
+        let fileName = 'test.txt';
+        let mode = pair;
+
+        if (lastSpace !== -1) {
+            fileName = pair.slice(0, lastSpace).trim();
+            mode = pair.slice(lastSpace + 1).trim();
+        }
+
+        const fullPath = path.join(process.cwd(), fileName);
+
+        await Bun.write(fullPath, '123');
+        await $`chmod ${mode} ${fullPath}`.quiet();
+        this.targetObj.push(fullPath);
+    }
+
+});
+
 
 When("установлена опция {string}", async function(option) {
     this.option = option;
@@ -96,7 +119,7 @@ Then('сравниваем результат с {string}', async function (answ
 
 });
 
-Then('проверяем кластер файлов на наличие новых прав', async function() {
+Then('проверяем кластер файлов и папок на наличие новых прав', async function() {
     const glob = new Bun.Glob("**/*");
 
 
@@ -106,6 +129,18 @@ Then('проверяем кластер файлов на наличие нов�
         await ExpectMode(fullPath, this.newMode);
     }
 
+})
+
+Then('сравнить {int} объект из списка существующих на равенство прав со всеми остальными', async function(index1) {
+
+
+    const stats = await fs.stat(this.targetObj[index1-1]);
+    const answerMode = (stats.mode & 0o7777).toString(8);
+
+    for (const file of this.targetObj) {
+        
+        await ExpectMode(file, answerMode);
+    }
 
 })
 
@@ -113,9 +148,8 @@ Then('проверяем кластер файлов на наличие нов�
 
 After(async function () {
     
-    await fs.chmod(this.targetObj, 0o777);
-    await fs.rm(this.targetObj, { recursive: true, force: true });
-    
+    await $`chmod 777 ${this.targetObj}`.quiet();
+    await $`rm -rf ${this.targetObj}`.quiet();
 })
 
 
