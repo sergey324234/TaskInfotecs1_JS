@@ -45,6 +45,11 @@ sudo docker run --rm chmod-cucumber-tests
 
 Если потребуется результат в виде exit-code, то введите следующую команду
 ```bash
+echo $?
+```
+
+или если у вас FishShell
+```bash
 echo $status
 ```
 
