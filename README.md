@@ -16,20 +16,31 @@
 ---
 ## Инструкция по сборке и запуску
 
-### 1. Требования
+### 0. Требования
 Должна быть установлена версия Docker 29.1.3
+
+### 1. Установка
+
+Выполните команду в терминале:
+```bash
+git clone https://github.com/sergey324234/TaskInfotecs1_JS
+```
+Затем перейдите в корневую папку проекта
+```bash
+cd TaskInfotecs1_JS
+```
 
 ### 2. сборка Docker контейнера
 
 Выполните команду в коpневой папки проекта для сборки:
 
 ```bash
-docker build -t chmod-cucumber-tests .
+sudo docker build -t chmod-cucumber-tests .
 ```
 
 Затем выполните команду для запуска самого docker контейнера
 ```bash
-docker run --rm chmod-cucumber-tests
+sudo docker run --rm chmod-cucumber-tests
 ```
 
 Если потребуется результат в виде exit-code, то введите следующую команду
